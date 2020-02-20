@@ -1,0 +1,55 @@
+version: "3"
+services:
+  consul:
+    image: consul:1.4.0
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    hostname: consul-server-1
+    ports:
+      - "8500:8500"
+  client:
+    image: nicolaka/netshoot:latest
+    entrypoint: ["sleep", "86400"]
+  vault-1:
+    image: vault:1.0.0
+    entrypoint: ["vault", "server", "-config", "/etc/vault.d/vault.hcl"]
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
+    volumes:
+      - ./vault-1.hcl:/etc/vault.d/vault.hcl
+    cap_add:
+      - ALL
+    depends_on:
+      - consul
+  vault-2:
+    image: vault:1.0.0
+    entrypoint: ["vault", "server", "-config", "/etc/vault.d/vault.hcl"]
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
+    volumes:
+      - ./vault-2.hcl:/etc/vault.d/vault.hcl
+    cap_add:
+      - ALL
+    depends_on:
+      - consul
+  vault-3:
+    image: vault:1.0.0
+    entrypoint: ["vault", "server", "-config", "/etc/vault.d/vault.hcl"]
+    environment:
+      - VAULT_ADDR=http://127.0.0.1:8200
+    volumes:
+      - ./vault-3.hcl:/etc/vault.d/vault.hcl
+    cap_add:
+      - ALL
+    depends_on:
+      - consul
+  nginx:
+    image: nginx:1.17.8-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/vault.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - vault-1
+      - vault-2
+      - vault-3
